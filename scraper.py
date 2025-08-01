@@ -1,7 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-import time
+import time, random, json
 import pandas as pd
 import sys
 import os
@@ -22,18 +22,19 @@ def _init_driver(headless=True):
 def get_amazon_search_url(query, page):
     return f"https://www.amazon.in/s?k={query.replace(' ', '+')}&page={page}"
 
-def scrape_amazon_results(search_term, num_pages):
+def scrape_amazon_results(search_term, no_of_products):
     driver = _init_driver(headless=True)
     print('Driver intiated')
 
     products = []
-    
-    for page in range(1, num_pages+1):
-        url = get_amazon_search_url(search_term, page)
-        print(f'Got Amazon Search Url for page {page}')
+    page_no = 1
+    while len(products) < no_of_products:
+        url = get_amazon_search_url(search_term, page_no)
+        print(f'Got Amazon Search Url for page {page_no}')
+        page_no += 1
         driver.get(url)
         print('Visting Url')
-        time.sleep(2)
+        time.sleep(random.uniform(2,4))
 
         results = driver.find_elements(By.XPATH, '//div[@data-component-type="s-search-result"]')
         print("Found results")
@@ -58,7 +59,7 @@ def scrape_amazon_results(search_term, num_pages):
             try:
                 reviews = item.find_element(By.XPATH, './/span[@class = "a-size-base s-underline-text"]').text
             except:
-                review = None
+                reviews = None
 
             product = {
                 'Title':title,
@@ -68,15 +69,22 @@ def scrape_amazon_results(search_term, num_pages):
             }
 
             products.append(product)
-
+            # Break out of for loop when the number of products have been scraped
+            if len(products) == no_of_products:
+                break
     driver.quit()
     print('Found products')
     return products
 
 def save_to_csv(data, filename="output/products.csv"):
     df = pd.DataFrame(data)
+    os.makedirs(os.path.dirname(filename), exist_ok = True)
     df.to_csv(filename, index=False)
     print(f"✅ Data saved to {filename}")
+
+def save_to_json(data):
+    with open('output/products.json', 'w', encoding = 'utf-8') as f:
+        json.dump(data, f, indent = 4, ensure_ascii = False)
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
@@ -85,9 +93,15 @@ if __name__ == '__main__':
         sys.exit(1)
 
     search_term = sys.argv[1]
-    num_pages = int(sys.argv[2])
-    print(f"🔍 Searching Amazon for {search_term} on {num_pages} pages.")
-    scraped_data = scrape_amazon_results(search_term, num_pages)
-    save_to_csv(scraped_data)
+    no_of_products = int(sys.argv[2])
+    file_format = sys.argv[3]
+    print(f"🔍 Searching Amazon for {search_term} .")
+    scraped_data = scrape_amazon_results(search_term, no_of_products)
+    if file_format.lower() == 'csv':
+        save_to_csv(scraped_data)
+    elif file_format.lower() == 'json':
+        save_to_json(scraped_data)
+    else:
+        print("Please choose a valid format(csv/json).")
     
     
