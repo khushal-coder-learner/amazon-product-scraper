@@ -19,53 +19,55 @@ def _init_driver(headless=True):
     return webdriver.Chrome(options = chrome_options)
 
 
-def get_amazon_search_url(query):
-    return f"https://www.amazon.in/s?k={query.replace(' ', '+')}"
+def get_amazon_search_url(query, page):
+    return f"https://www.amazon.in/s?k={query.replace(' ', '+')}&page={page}"
 
-def scrape_amazon_results(search_term):
+def scrape_amazon_results(search_term, num_pages):
     driver = _init_driver(headless=True)
     print('Driver intiated')
-    url = get_amazon_search_url(search_term)
-    print('Got Amazon Search Url')
-    driver.get(url)
-    print('Visting Url')
-    time.sleep(2)
 
     products = []
+    
+    for page in range(1, num_pages+1):
+        url = get_amazon_search_url(search_term, page)
+        print(f'Got Amazon Search Url for page {page}')
+        driver.get(url)
+        print('Visting Url')
+        time.sleep(2)
 
-    results = driver.find_elements(By.XPATH, '//div[@data-component-type="s-search-result"]')
-    print("Found results")
+        results = driver.find_elements(By.XPATH, '//div[@data-component-type="s-search-result"]')
+        print("Found results")
 
-    for item in results:
-        try:
-            title = item.find_element(By.XPATH, './/a/h2/span').text
-        except:
-            title = None
+        for item in results:
+            try:
+                title = item.find_element(By.XPATH, './/a/h2/span').text
+            except:
+                title = None
 
-        try:
-            price = item.find_element(By.XPATH, './/span[@class = "a-price-whole"]').text
-        except:
-            price = None
+            try:
+                price = item.find_element(By.XPATH, './/span[@class = "a-price-whole"]').text
+            except:
+                price = None
 
-        try:
-            rating_string = item.find_element(By.XPATH, './/a[contains(@aria-label,     "out of 5 stars")]').get_attribute('aria-label')
-            rating = rating_string.split(',')[0]
-        except:
-            rating = None
-        
-        try:
-            reviews = item.find_element(By.XPATH, './/span[@class = "a-size-base s-underline-text"]').text
-        except:
-            review = None
+            try:
+                rating_string = item.find_element(By.XPATH, './/a[contains(@aria-label,     "out of 5 stars")]').get_attribute('aria-label')
+                rating = rating_string.split(',')[0]
+            except:
+                rating = None
+            
+            try:
+                reviews = item.find_element(By.XPATH, './/span[@class = "a-size-base s-underline-text"]').text
+            except:
+                review = None
 
-        product = {
-            'Title':title,
-            'Price':price,
-            'Rating':rating,
-            'Reviews':reviews
-        }
+            product = {
+                'Title':title,
+                'Price':price,
+                'Rating':rating,
+                'Reviews':reviews
+            }
 
-        products.append(product)
+            products.append(product)
 
     driver.quit()
     print('Found products')
@@ -83,8 +85,9 @@ if __name__ == '__main__':
         sys.exit(1)
 
     search_term = sys.argv[1]
-    print(f"🔍 Searching Amazon for {search_term}")
-    scraped_data = scrape_amazon_results(search_term)
+    num_pages = int(sys.argv[2])
+    print(f"🔍 Searching Amazon for {search_term} on {num_pages} pages.")
+    scraped_data = scrape_amazon_results(search_term, num_pages)
     save_to_csv(scraped_data)
     
     
