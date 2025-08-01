@@ -1,3 +1,22 @@
+"""
+Amazon Product Scraper
+
+This script scrapes product data from Amazon India search results using Selenium.
+It collects product title, price, rating, and review count for a given search term.
+
+Usage:
+    python scraper.py "<search_term>" <number_of_products> <csv/json>
+
+Arguments:
+    search_term         The product keyword to search for.
+    number_of_products  Number of products to scrape.
+    csv/json            Output format.
+
+Outputs:
+    - output/products.csv (if csv selected)
+    - output/products.json (if json selected)
+"""
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -7,6 +26,15 @@ import sys
 import os
 
 def _init_driver(headless=True):
+    """
+    Initialize a Selenium Chrome WebDriver with custom options.
+
+    Args:
+        headless (bool): Run browser in headless mode.
+
+    Returns:
+        webdriver.Chrome: Configured Chrome WebDriver instance.
+    """
     chrome_options = Options()
     if headless:
         chrome_options.add_argument('--headless')
@@ -18,11 +46,30 @@ def _init_driver(headless=True):
     chrome_options.add_argument(f"user-agent={user_agent}")
     return webdriver.Chrome(options = chrome_options)
 
-
 def get_amazon_search_url(query, page):
+    """
+    Generate Amazon search URL for a given query and page number.
+
+    Args:
+        query (str): Search term.
+        page (int): Page number.
+
+    Returns:
+        str: Amazon search URL.
+    """
     return f"https://www.amazon.in/s?k={query.replace(' ', '+')}&page={page}"
 
 def scrape_amazon_results(search_term, no_of_products):
+    """
+    Scrape Amazon search results for a given term.
+
+    Args:
+        search_term (str): Product keyword to search.
+        no_of_products (int): Number of products to scrape.
+
+    Returns:
+        list: List of product dictionaries.
+    """
     driver = _init_driver(headless=True)
     print('Driver intiated')
 
@@ -77,12 +124,25 @@ def scrape_amazon_results(search_term, no_of_products):
     return products
 
 def save_to_csv(data, filename="output/products.csv"):
+    """
+    Save scraped data to a CSV file.
+
+    Args:
+        data (list): List of product dictionaries.
+        filename (str): Output CSV file path.
+    """
     df = pd.DataFrame(data)
     os.makedirs(os.path.dirname(filename), exist_ok = True)
     df.to_csv(filename, index=False)
     print(f"✅ Data saved to {filename}")
 
 def save_to_json(data):
+    """
+    Save scraped data to a JSON file.
+
+    Args:
+        data (list): List of product dictionaries.
+    """
     with open('output/products.json', 'w', encoding = 'utf-8') as f:
         json.dump(data, f, indent = 4, ensure_ascii = False)
 
@@ -103,5 +163,4 @@ if __name__ == '__main__':
         save_to_json(scraped_data)
     else:
         print("Please choose a valid format(csv/json).")
-    
-    
+
