@@ -106,7 +106,10 @@ def scrape_amazon_results(search_term, no_of_products):
             try:
                 reviews = item.find_element(By.XPATH, './/span[@class = "a-size-base s-underline-text"]').text
             except:
-                reviews = None
+                try:
+                    reviews = item.find_element(By.XPATH, './/span[@class = "a-size-base"]').text
+                except:
+                    reviews = None
 
             product = {
                 'Title':title,
@@ -119,11 +122,14 @@ def scrape_amazon_results(search_term, no_of_products):
             # Break out of for loop when the number of products have been scraped
             if len(products) == no_of_products:
                 break
+
+            time.sleep(random.uniform(0.3, 0.9))
+
     driver.quit()
     print('Found products')
     return products
 
-def save_to_csv(data, filename="output/products.csv"):
+def save_to_csv(data, filename):
     """
     Save scraped data to a CSV file.
 
@@ -136,14 +142,14 @@ def save_to_csv(data, filename="output/products.csv"):
     df.to_csv(filename, index=False)
     print(f"✅ Data saved to {filename}")
 
-def save_to_json(data):
+def save_to_json(data, filename):
     """
     Save scraped data to a JSON file.
 
     Args:
         data (list): List of product dictionaries.
     """
-    with open('output/products.json', 'w', encoding = 'utf-8') as f:
+    with open(filename, 'w', encoding = 'utf-8') as f:
         json.dump(data, f, indent = 4, ensure_ascii = False)
 
 if __name__ == '__main__':
@@ -158,9 +164,11 @@ if __name__ == '__main__':
     print(f"🔍 Searching Amazon for {search_term} .")
     scraped_data = scrape_amazon_results(search_term, no_of_products)
     if file_format.lower() == 'csv':
-        save_to_csv(scraped_data)
+        filename = f'output/{search_term.replace(' ', '_')}_products.csv'
+        save_to_csv(scraped_data, filename)
     elif file_format.lower() == 'json':
-        save_to_json(scraped_data)
+        filename = f'output/{search_term.replace(' ', '_')}_products.json'
+        save_to_json(scraped_data, filename)
     else:
         print("Please choose a valid format(csv/json).")
 
