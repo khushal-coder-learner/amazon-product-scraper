@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, render_template
-from scraper import scrape_amazon_results
+from scraper.scraper import scrape_amazon_results
 
 app = Flask(__name__)
 

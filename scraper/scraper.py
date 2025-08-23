@@ -70,7 +70,7 @@ def scrape_amazon_results(search_term, no_of_products):
     Returns:
         list: List of product dictionaries.
     """
-    driver = _init_driver(headless=False)
+    driver = _init_driver(headless=True)
     print('Driver intiated')
 
     products = []

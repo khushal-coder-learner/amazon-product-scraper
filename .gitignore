@@ -221,3 +221,23 @@ output/
 
 # OS files
 .DS_Store
+
+# Sphinx documentation
+docs/_build/
+docs/build/
+*.aux
+*.fdb_latexmk
+*.fls
+*.idx
+*.ilg
+*.ind
+*.lof
+*.lot
+*.out
+*.toc
+*.synctex.gz
+*.xdy
+*.nav
+*.snm
+*.tex
+*.pdf
